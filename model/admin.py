@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Currency, ExchangeHistory
 
-# Register your models here.
+admin.site.register(ExchangeHistory)
+admin.site.register(Currency)
