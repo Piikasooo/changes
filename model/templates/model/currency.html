@@ -5,9 +5,9 @@
 </div>
 {% for rate in history %}
     <div class="row d-flex justify-content-center mt-3">
-        {{ rate.valid_from }} - {{ rate.valid_until }}:&nbsp;
-        <b>{{ rate.purchase_rate }}
-            {{ rate.selling_rate }}</b>
+        {{ rate.from_date }} - {{ rate.until_date }}:&nbsp;
+        <b>{{ rate.purchase }}
+            {{ rate.selling }}</b>
     </div>
 {% endfor %}
 

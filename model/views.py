@@ -10,6 +10,6 @@ def get_index_page(request):
 
 def get_currency_history(request, currency_name):
     currency = get_object_or_404(Currency, currency=currency_name)
-    history = ExchangeHistory.objects.filter(currency=currency).order_by('-valid_from')
+    history = ExchangeHistory.objects.all()   #filter(currency=currency)
     return render(request, 'model/currency.html', {'currency': currency,
                                                      'history': history})
