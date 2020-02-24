@@ -6,8 +6,8 @@
 {% for rate in history %}
     <div class="row d-flex justify-content-center mt-3">
         {{ rate.from_date }} - {{ rate.until_date }}:&nbsp;
-        <b>{{ rate.purchase }}
-            {{ rate.selling }}</b>
+        <b>buy: {{ rate.purchase }}
+            sell: {{ rate.selling }}</b>
     </div>
 {% endfor %}
 

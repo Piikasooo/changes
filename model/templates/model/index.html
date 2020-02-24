@@ -3,8 +3,6 @@
 {% for currency in currencies %}
 <div class="row d-flex justify-content-center mt-3">
     <a href="{% url 'currency' currency_name=currency %}">{{currency}}</a>&nbsp;
-    {{ currency.exchange_rate_history.last.purchase }}
-    {{ currency.exchange_rate_history.last.selling }}
 </div>
 
 {% endfor %}

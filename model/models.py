@@ -1,5 +1,5 @@
 from django.db import models, IntegrityError
-from datetime import timedelta
+from datetime import timedelta , datetime
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -18,13 +18,41 @@ class ExchangeHistory(models.Model):
     until_date = models.DateField(blank=True, null=True)
 
     class Meta:
-        unique_together = (('currency', 'from_date'),)
+        ordering = ['from_date']
 
     def __str__(self):
         return f'{self.from_date} {self.until_date if self.until_date else ""} {self.purchase} {self.selling}'
 
-    def get_all_history(currency):
-        return ExchangeHistory.objects.filter(currency=currency)
+
+def get_all_currency_history(currency):
+    return ExchangeHistory.objects.filter(currency=currency)
 
 
-        
+def add_rate(from_date, purchase, selling, currency_id):
+    from_date = datetime.strptime(from_date, "%Y-%m-%d")
+    currency = Currency.objects.get(id=currency_id)
+    last_rate = get_all_currency_history(currency).last()
+    last_rate.until_date = (from_date - timedelta(days=1))
+    last_rate.save()
+    new_rate = ExchangeHistory(from_date=from_date, purchase=purchase, selling=selling)
+    new_rate.save()
+
+
+def insert_rate(from_date, purchase, selling, currency):
+    from_date = datetime.strptime(from_date, "%Y-%m-%d")
+    id = None
+    history = get_all_currency_history(currency)
+    for rate in history:
+        if rate.from_date <= from_date.date():
+            id = rate.id
+        else:
+            break
+    update_rate = ExchangeHistory.objects.get(id=id)
+    ins_rate = ExchangeHistory(from_date=from_date , until_date=update_rate.until_date, purchase=purchase,
+                               selling=selling, currency=currency)
+    update_rate.until_date = from_date - timedelta(days=1)
+    update_rate.save()
+    ins_rate.save()
+
+
+
