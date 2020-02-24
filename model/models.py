@@ -27,13 +27,14 @@ def get_all_currency_history(currency):
     return ExchangeHistory.objects.filter(currency=currency)
 
 
-def add_rate(from_date, purchase, selling, currency_id):
+def add_rate(from_date, purchase, selling, currency_id, until_date):
     from_date = datetime.strptime(from_date, "%Y-%m-%d")
     currency = Currency.objects.get(id=currency_id)
     last_rate = get_all_currency_history(currency).last()
     last_rate.until_date = (from_date - timedelta(days=1))
     last_rate.save()
-    new_rate = ExchangeHistory(from_date=from_date, purchase=purchase, selling=selling)
+    new_rate = ExchangeHistory(from_date=from_date, purchase=purchase, selling=selling,
+                               until_date=until_date, currency_id=currency_id)
     new_rate.save()
     return new_rate
 
