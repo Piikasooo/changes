@@ -1,0 +1,4 @@
+[{"model": "model.currency", "pk": 1, "fields": {"currency": "USD"}},
+  {"model": "model.exchangehistory", "pk": 1, "fields": {"currency": 1, "purchase": "23.66", "selling": "24.57", "from_date": "2019-01-30", "until_date": "2019-02-09"}},
+  {"model": "model.exchangehistory", "pk": 2, "fields": {"currency": 1, "purchase": "23.98", "selling": "25.34", "from_date": "2019-02-10", "until_date": "2019-03-14"}},
+  {"model": "model.exchangehistory", "pk": 3, "fields": {"currency": 1, "purchase": "24.33", "selling": "25.87", "from_date": "2019-03-15", "until_date": "2019-04-17"}}]
