@@ -1,6 +1,5 @@
-from django.db import models, IntegrityError
-from datetime import timedelta , datetime
-from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+from datetime import timedelta, datetime
 
 
 class Currency(models.Model):
@@ -36,6 +35,7 @@ def add_rate(from_date, purchase, selling, currency_id):
     last_rate.save()
     new_rate = ExchangeHistory(from_date=from_date, purchase=purchase, selling=selling)
     new_rate.save()
+    return new_rate
 
 
 def insert_rate(from_date, purchase, selling, currency):
@@ -53,11 +53,13 @@ def insert_rate(from_date, purchase, selling, currency):
     update_rate.until_date = from_date - timedelta(days=1)
     update_rate.save()
     ins_rate.save()
+    return ins_rate
 
 
 def delete_rate(rate_id):
     rate = ExchangeHistory.objects.get(id=rate_id)
     rate.delete()
+    return rate
 
 
 
