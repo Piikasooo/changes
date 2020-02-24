@@ -55,4 +55,9 @@ def insert_rate(from_date, purchase, selling, currency):
     ins_rate.save()
 
 
+def delete_rate(rate_id):
+    rate = ExchangeHistory.objects.get(id=rate_id)
+    rate.delete()
+
+
 
