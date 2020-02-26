@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models, IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 from datetime import timedelta, datetime
 
 
@@ -22,45 +23,42 @@ class ExchangeHistory(models.Model):
     def __str__(self):
         return f'{self.from_date} {self.until_date if self.until_date else ""} {self.purchase} {self.selling}'
 
+    def _first(self):
+        return ExchangeHistory.objects.filter(currency=self.currency).lasted('-from_date')
 
-def get_all_currency_history(currency):
-    return ExchangeHistory.objects.filter(currency=currency)
+    def _last(self):
+        return ExchangeHistory.objects.filter(currency=self.currency).lasted('from_date')
 
+    def _prev(self):
+        return ExchangeHistory.objects.filter(currency=self.currency, from_date__lt=self.from_date).latest('from_date')
 
-def add_rate(from_date, purchase, selling, currency_id, until_date):
-    from_date = datetime.strptime(from_date, "%Y-%m-%d")
-    currency = Currency.objects.get(id=currency_id)
-    last_rate = get_all_currency_history(currency).last()
-    last_rate.until_date = (from_date - timedelta(days=1))
-    last_rate.save()
-    new_rate = ExchangeHistory(from_date=from_date, purchase=purchase, selling=selling,
-                               until_date=until_date, currency_id=currency_id)
-    new_rate.save()
-    return new_rate
+    def _change(self, change_obj):
+        change_obj.until_date = self.from_date - timedelta(days=1)
+        change_obj.save()
 
+    def save(self, *args, **kwargs):
+        if self.until_date is not None and self.until_date < self.from_date:
+            raise IntegrityError
+        if not self.id:
+            try:
+                first = self._first()
+                if self.from_date < first.from_date and (self.until_date is None or self.until_date < first.from_date):
+                    self.until_date = first.from_date - timedelta(days=1)
+                elif first.from_date < self.from_date:
+                    last = self._last()
+                    if self.from_date > last.from_date and (last.until_date is None or last.until_date < self.from_date):
+                        self._change(last)
+                    else:
+                        prev = self._prev()
+                        if self.until_date is None or self.until_date < prev.until_date:
+                            self.until_date = prev.until_date
+                        self._change(prev)
+                else:
+                    raise IntegrityError
+            except ObjectDoesNotExist:
+                pass
+        super().save(*args, **kwargs)
 
-def insert_rate(from_date, purchase, selling, currency):
-    from_date = datetime.strptime(from_date, "%Y-%m-%d")
-    id = None
-    history = get_all_currency_history(currency)
-    for rate in history:
-        if rate.from_date <= from_date.date():
-            id = rate.id
-        else:
-            break
-    update_rate = ExchangeHistory.objects.get(id=id)
-    ins_rate = ExchangeHistory(from_date=from_date , until_date=update_rate.until_date, purchase=purchase,
-                               selling=selling, currency=currency)
-    update_rate.until_date = from_date - timedelta(days=1)
-    update_rate.save()
-    ins_rate.save()
-    return ins_rate
-
-
-def delete_rate(rate_id):
-    rate = ExchangeHistory.objects.get(id=rate_id)
-    rate.delete()
-    return rate
 
 
 
