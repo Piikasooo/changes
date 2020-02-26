@@ -59,6 +59,12 @@ class ExchangeHistory(models.Model):
                 pass
         super().save(*args, **kwargs)
 
-
+    def delete(self, *args, **kwargs):
+        if self._first() != self:
+            prev = self._prev()
+            if self != self._last() and prev:
+                prev.until_date = self.until_date
+                prev.save()
+        super().delete(*args, **kwargs)
 
 
