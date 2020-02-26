@@ -24,10 +24,10 @@ class ExchangeHistory(models.Model):
         return f'{self.from_date} {self.until_date if self.until_date else ""} {self.purchase} {self.selling}'
 
     def _first(self):
-        return ExchangeHistory.objects.filter(currency=self.currency).lasted('-from_date')
+        return ExchangeHistory.objects.filter(currency=self.currency).latest('-from_date')
 
     def _last(self):
-        return ExchangeHistory.objects.filter(currency=self.currency).lasted('from_date')
+        return ExchangeHistory.objects.filter(currency=self.currency).latest('from_date')
 
     def _prev(self):
         return ExchangeHistory.objects.filter(currency=self.currency, from_date__lt=self.from_date).latest('from_date')
