@@ -24,7 +24,7 @@ class ExchangeHistory(models.Model):
         return f'{self.from_date} {self.until_date if self.until_date else ""} {self.purchase} {self.selling}'
 
     def _first(self):
-        return ExchangeHistory.objects.filter(currency=self.currency).latest('-from_date')
+        return ExchangeHistory.objects.filter(currency=self.currency).earliest('from_date')
 
     def _last(self):
         return ExchangeHistory.objects.filter(currency=self.currency).latest('from_date')
@@ -42,11 +42,11 @@ class ExchangeHistory(models.Model):
         if not self.id:
             try:
                 first = self._first()
-                if self.from_date < first.from_date and (self.until_date is None or self.until_date < first.from_date):
+                if is_valid(self.from_date, first.from_date, self.until_date):
                     self.until_date = first.from_date - timedelta(days=1)
-                elif first.from_date < self.from_date:
+                elif self.from_date > first.from_date:
                     last = self._last()
-                    if self.from_date > last.from_date and (last.until_date is None or last.until_date < self.from_date):
+                    if is_valid(last.from_date, self.from_date, last.until_date):
                         self._change(last)
                     else:
                         prev = self._prev()
@@ -68,3 +68,5 @@ class ExchangeHistory(models.Model):
         super().delete(*args, **kwargs)
 
 
+def is_valid(firstrate_fromdate, secondrate_fromdate, until_date):
+    return firstrate_fromdate < secondrate_fromdate and (until_date is None or until_date < secondrate_fromdate)
