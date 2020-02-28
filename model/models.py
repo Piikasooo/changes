@@ -1,6 +1,6 @@
 from django.db import models, IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 
 class Currency(models.Model):
@@ -23,21 +23,28 @@ class ExchangeHistory(models.Model):
     def __str__(self):
         return f'{self.from_date} {self.until_date if self.until_date else ""} {self.purchase} {self.selling}'
 
-    def next(self):
+    def get_next_rate(self):
+        """
+        Getting the rate is the from_date which is later than the rate from_date we are trying to enter
+        """
         try:
             return ExchangeHistory.objects.filter(currency=self.currency,
                                                   from_date__gt=self.from_date).latest('from_date')
         except ObjectDoesNotExist:
             return None
 
-    def previous(self):
+    def get_previous_rate(self):
+        """
+        Getting the rate is the from_date which is earlier than the rate from_date we are trying to enter
+        """
         try:
             return ExchangeHistory.objects.filter(currency=self.currency,
                                                   from_date__lt=self.from_date).latest('from_date')
         except ObjectDoesNotExist:
             return None
 
-    def _change(self, change_obj):
+    def change(self, change_obj):
+        """Change rate until_from when add/delete new rate"""
         change_obj.until_date = self.from_date - timedelta(days=1)
         change_obj.save()
 
@@ -45,12 +52,12 @@ class ExchangeHistory(models.Model):
         if self.until_date is not None and self.until_date < self.from_date:
             raise IntegrityError
         if not self.id:
-            previous_rate = self.previous()
-            next_rate = self.next()
+            previous_rate = self.get_previous_rate()
+            next_rate = self.get_next_rate()
             if previous_rate is None:
-                next_rate._change(self)
+                next_rate.change(self)
             elif next_rate is None:
-                self._change(previous_rate)
+                self.change(previous_rate)
             else:
                 previous_rate.until_date = self.from_date - timedelta(days=1)
                 previous_rate.save()
@@ -58,8 +65,8 @@ class ExchangeHistory(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        previous_rate = self.previous()
-        next_rate = self.next()
+        previous_rate = self.get_previous_rate()
+        next_rate = self.get_next_rate()
         if previous_rate is not None and next_rate is not None:
             previous_rate.until_date = self.until_date
             previous_rate.save()
